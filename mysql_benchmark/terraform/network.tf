@@ -54,12 +54,19 @@ resource "aws_route_table_association" "rt_a_standalone" {
 
 # Security group rules to allow ssh and http on the load balancer from all addresses
 resource "aws_security_group" "network_sg" {
-  name   = "SSH"
+  name   = "SSH-MYSQL"
   vpc_id = aws_vpc.vpc.id
 
   ingress {
     from_port   = 22
     to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
