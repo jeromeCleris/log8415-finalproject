@@ -1,0 +1,89 @@
+#!/bin/bash
+
+#installing cluster manager
+sudo apt-get update
+sudo wget https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster-community-management-server_8.0.31-1ubuntu20.04_amd64.deb
+sudo dpkg -i mysql-cluster-community-management-server_8.0.31-1ubuntu20.04_amd64.deb
+
+sudo su
+mkdir /var/lib/mysql-cluster
+#creating cluster config file *TO EDIT
+echo "[ndbd default]
+# Options affecting ndbd processes on all data nodes:
+NoOfReplicas=3	# Number of replicas
+
+[ndb_mgmd]
+# Management process options:
+hostname= # Hostname of the manager
+datadir=/var/lib/mysql-cluster 	# Directory for the log files
+
+[ndbd]
+hostname= # Hostname/IP of the first data node
+NodeId=2			# Node ID for this data node
+datadir=/usr/local/mysql/data	# Remote directory for the data files
+
+[ndbd]
+hostname= # Hostname/IP of the second data node
+NodeId=3			# Node ID for this data node
+datadir=/usr/local/mysql/data	# Remote directory for the data files
+
+[ndbd]
+hostname= # Hostname/IP of the second data node
+NodeId=4			# Node ID for this data node
+datadir=/usr/local/mysql/data	# Remote directory for the data files
+
+[mysqld]
+# SQL node options:
+hostname= # In our case the MySQL server/client is on the same Droplet as the cluster manager" > /var/lib/mysql-cluster/config.ini
+
+#creating service config file
+echo "[Unit]
+Description=MySQL NDB Cluster Management Server
+After=network.target auditd.service
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/ndb_mgmd -f /var/lib/mysql-cluster/config.ini
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target" > /etc/systemd/system/ndb_mgmd.service
+
+#installing mysql Server
+wget https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster_8.0.31-1ubuntu20.04_amd64.deb-bundle.tar
+mkdir install
+tar -xvf mysql-cluster_8.0.31-1ubuntu20.04_amd64.deb-bundle.tar -C install/
+
+# creating mysql config file *TO EDIT
+    # echo "[mysqld]
+    # # Options for mysqld process:
+    # ndbcluster                      # run NDB storage engine
+
+    # [mysql_cluster]
+    # # Options for NDB Cluster processes:
+    # ndb-connectstring=  # location of management server" > /etc/mysql/my.cnf
+
+#To manually execute:
+# -edit config files
+#   /var/lib/mysql-cluster/config.ini
+# -init service, kill, set service configs, restart
+#   ndb_mgmd -f /var/lib/mysql-cluster/config.ini
+#   pkill -f ndb_mgmd
+#   systemctl daemon-reload
+#   systemctl start ndb_mgmd
+#   systemctl enable ndb_mgmd
+#   systemctl status ndb_mgmd
+# -install mysql service after nodes done
+#   cd install
+#   apt install libaio1 libmecab2
+#   dpkg -i *.deb
+#   apt-get install -f
+# -editing mysql config file
+#   vim /etc/mysql/my.cnf
+# -Restart mysql
+#   systemctl restart mysql
+# -login on MySQL create benchmarking user
+# -import sakiladb
+# -configure firewall to accept outside requests

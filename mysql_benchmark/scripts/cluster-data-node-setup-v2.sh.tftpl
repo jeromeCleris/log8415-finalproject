@@ -1,0 +1,45 @@
+#!/bin/bash
+
+sudo su
+
+#installing NBD data node binaries
+apt-get update
+wget https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster-community-data-node_8.0.31-1ubuntu20.04_amd64.deb
+
+apt-get install libclass-methodmaker-perl
+dpkg -i mysql-cluster-community-data-node_8.0.31-1ubuntu20.04_amd64.deb
+
+
+#creating Node config *TO EDIT
+echo "[mysql_cluster]
+# Options for NDB Cluster processes:
+ndb-connectstring=  # location of cluster manager" > /etc/my.cnf
+
+#creating data dir
+mkdir -p /usr/local/mysql/data
+
+#creating service config
+echo "[Unit]
+Description=MySQL NDB Data Node Daemon
+After=network.target auditd.service
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/ndbd
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target" > /etc/systemd/system/ndbd.service
+
+#To manually execute
+# -edit config files
+#   /etc/my.cnf
+# -attempt connection, kill service, set service configs, restart
+#   ndbd
+#   pkill -f ndbd
+#   systemctl daemon-reload
+#   systemctl start ndbd
+#   systemctl enable ndbd
+#   systemctl status ndbd

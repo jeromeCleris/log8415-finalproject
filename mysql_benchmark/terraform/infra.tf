@@ -5,25 +5,23 @@
 # Declaring 4 instances of the t2 type for the cluster
 resource "aws_instance" "t2_cluster" {
   count                       = 4
-  ami                         = "ami-0149b2da6ceec4bb0"
-  instance_type               = "t2.micro"
+  ami                         = "ami-0a6b2839d44d781b2"
+  instance_type               = "t2.large"
   associate_public_ip_address = true
-#   user_data = templatefile("../scripts/instance-config.sh.tftpl", {
-#     number = count.index
-#   })
+  user_data = count.index == 0 ? templatefile("../scripts/cluster-master-setup-v2.sh.tftpl", {}) : templatefile("../scripts/cluster-data-node-setup-v2.sh.tftpl", {})
   subnet_id              = aws_subnet.cluster_subnet.id
   vpc_security_group_ids = [aws_security_group.network_sg.id]
   key_name = "log8415-finalprojet-keypair"
 
   tags = {
-    "name" = format("cluster-%d", count.index + 1)
+    "Name" = var.cluster_instance_names[count.index]
   }
 }
 
 # Declaring 1 instance of the t2 type for the stand-alone
 resource "aws_instance" "t2_stand-alone" {
   ami                         = "ami-0149b2da6ceec4bb0"
-  instance_type               = "t2.micro"
+  instance_type               = "t2.large"
   associate_public_ip_address = true
   user_data = templatefile("../scripts/standalone-setup.sh.tftpl", {})
   subnet_id              = aws_subnet.standalone_subnet.id
@@ -31,12 +29,10 @@ resource "aws_instance" "t2_stand-alone" {
   key_name = "log8415-finalprojet-keypair"
 
   tags = {
-    "name" = "standalone"
+    "Name" = "standalone"
   }
 }
 
-# Resource to create key_pair, conflicts if duplicated
-# resource "aws_key_pair" "keypair" {
-#     key_name = "log8415-finalprojet-keypair"
-#     public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCo+0+9wXNMpFmjvAU70chPe1FpqppYdhtHgaovk51XnQ9JBWP331g3Q7jwYUWlxZMH6ZPbo5Ftt0AWHxw16pSkB43w7zfhTl99O+OqjapjAeklAKTUc2AYMq7uyzSMZWkW972DwxBfzV37FtJKRoEG4DIhPqIOWjijhiBs9oPGS+S6ZLMw815a6QHqxL9RV4SnFwI5F2vss0gaoIZ71eCaLJDOdhAlLfAl0hsJ/Pwis6WZqhRXNDg1mHeE3Wl5c1tTncpBzset+jProaxPif+p0vMHlEGu0JP7Q3zXKt38hOYj1O94YFbNglwvCh3Ywiot13Se8XK3zrV4MU7MhUV9 log8415-finalprojet-keypair"
-# }
+variable cluster_instance_names {
+    type = list(string)
+}
