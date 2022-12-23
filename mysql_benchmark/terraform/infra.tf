@@ -33,6 +33,21 @@ resource "aws_instance" "t2_stand-alone" {
   }
 }
 
+#declaring 1 instance for the proxy
+resource "aws_instance" "t2-proxy" {
+  ami                         = "ami-0149b2da6ceec4bb0"
+  instance_type               = "t2.large"
+  associate_public_ip_address = true
+  #user_data = templatefile("", {})
+  subnet_id              = aws_subnet.standalone_subnet.id
+  vpc_security_group_ids = [aws_security_group.network_sg.id]
+  key_name = "log8415-finalprojet-keypair"
+
+  tags = {
+    "Name" = "proxy"
+  }
+}
+
 variable cluster_instance_names {
     type = list(string)
 }
