@@ -65,7 +65,6 @@ def getNodePings():
         output = str(ping.communicate()[0])
         time = re.search('(min\/avg\/max\/mdev = )(.*)', output).group(2).split('/')[1]
         latencies.append(time)
-    print(latencies)
     return latencies
 
 def routeQuery(nodeIndex, query):
@@ -74,11 +73,9 @@ def routeQuery(nodeIndex, query):
     queryResults = execQuery(query)
     sqlConnection.close()
     tunnel.stop()
-    return queryResults
+    return str(queryResults)
 
-def main():
-    print("testing tunnels")
-    queryResults = proxyPing("select * from actor limit 10")
-
-if __name__ == "__main__":
-    main()
+#Test queries
+# curl 127.0.0.1:5000/sql-random?query=select+*+from+actor+limit+10
+# curl 127.0.0.1:5000/sql-default?query=select+*+from+actor+limit+10
+# curl 127.0.0.1:5000/sql-ping?query=select+*+from+actor+limit+10
