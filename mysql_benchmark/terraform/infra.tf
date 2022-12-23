@@ -38,7 +38,7 @@ resource "aws_instance" "t2-proxy" {
   ami                         = "ami-0149b2da6ceec4bb0"
   instance_type               = "t2.large"
   associate_public_ip_address = true
-  #user_data = templatefile("", {})
+  user_data = templatefile("../../proxy_pattern/proxy-startup.sh.tftpl", {})
   subnet_id              = aws_subnet.standalone_subnet.id
   vpc_security_group_ids = [aws_security_group.network_sg.id]
   key_name = "log8415-finalprojet-keypair"

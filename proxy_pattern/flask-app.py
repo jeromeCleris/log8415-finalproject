@@ -2,7 +2,7 @@ from flask import Flask, request
 from proxy import *
 
 app = Flask(__name__)
-
+#routes for queries
 @app.route('/sql-random', methods = ['POST', 'GET'])
 def sqlRandom():
     query = request.args.get('query')

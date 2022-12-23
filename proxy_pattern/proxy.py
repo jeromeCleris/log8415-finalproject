@@ -1,3 +1,4 @@
+#Heavily inspired from https://practicaldatascience.co.uk/data-science/how-to-connect-to-mysql-via-an-ssh-tunnel-in-python
 import pymysql
 import pandas as pd
 import random
@@ -14,12 +15,14 @@ mysqlUser = "sysbench"
 mysqlPassword = "asd123"
 privateKeyFilePath = "/home/ubuntu/.ssh/log8415-finalprojet-keypair.pem"
 
+#executes sql query with connection
 def execQuery(query):
     return pd.read_sql_query(query, sqlConnection)
 
 def remotePrivateIp(nodeIndex):
     return '127.0.0.1' if nodeIndex == 0 else masterPrivateIP
 
+#Opens sshTunnel to specific node, binds mysql server address
 def openTunnel(nodeIndex):
     global tunnel
     tunnel = SSHTunnelForwarder(
@@ -31,6 +34,7 @@ def openTunnel(nodeIndex):
     
     tunnel.start()
 
+#connect to remote MySQL cluster
 def mysqlConnect(nodeIndex):
     global sqlConnection
     sqlConnection = pymysql.connect(
@@ -44,11 +48,15 @@ def mysqlConnect(nodeIndex):
 #Random mode => route to random node
 def proxyRandom(query):
     nodeIndex = random.randint(0,3)
+    
+    print("Request sent to ", nodeIndex)
     return routeQuery(nodeIndex, query)
 
 #default mode => route to Master node(nodes[0])
 def proxyDefault(query):
     nodeIndex = 0
+
+    print("Request sent to ", nodeIndex)
     return routeQuery(nodeIndex, query)
 
 #Ping mode => route to lowest ping from nodes
@@ -56,8 +64,10 @@ def proxyPing(query):
     pingLatencies = getNodePings()
     nodeIndex = pingLatencies.index(min(pingLatencies))
 
+    print("Request sent to ", nodeIndex)
     return routeQuery(nodeIndex, query)
 
+#pings all nodes and returns average latencies parsed from responses
 def getNodePings():
     latencies = []
     for nodeIP in nodes:
@@ -67,6 +77,7 @@ def getNodePings():
         latencies.append(time)
     return latencies
 
+#routes query to specific node and executes it
 def routeQuery(nodeIndex, query):
     openTunnel(nodeIndex)
     mysqlConnect(nodeIndex)
