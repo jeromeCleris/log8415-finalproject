@@ -1,8 +1,20 @@
 #!/bin/bash
 
+# installing required packages
 sudo apt-get update -y
 sudo apt-get install python3-pip -y
-
 sudo pip install pymysql
+sudo pip install sshtunnel
+sudo pip install pandas
+sudo pip install Flask
 
+# pulling git repository
+mkdir proxy
+cd proxy
+git clone https://github.com/jeromeCleris/log8415-finalproject.git
+cd log8415-finalproject/proxy_pattern
 
+#Manually
+# -copy sshkey (scp -i "log8415-finalprojet-keypair.pem" log8415-finalprojet-keypair.pem ubuntu@XXX.XXX.XXX.XXX)
+# -export flask variables
+# -start flask app

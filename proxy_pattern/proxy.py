@@ -1,7 +1,5 @@
 import pymysql
 import pandas as pd
-import sshtunnel
-import logging
 import random
 from sshtunnel import SSHTunnelForwarder
 import subprocess
@@ -14,7 +12,7 @@ masterPrivateIP = "10.0.1.254"
 sshUser = "ubuntu"
 mysqlUser = "sysbench"
 mysqlPassword = "asd123"
-privateKeyFilePath = "/home/jerome/.ssh/log8415-finalprojet-keypair.pem"
+privateKeyFilePath = "/home/ubuntu/.ssh/log8415-finalprojet-keypair.pem"
 
 def execQuery(query):
     return pd.read_sql_query(query, sqlConnection)
@@ -23,7 +21,6 @@ def remotePrivateIp(nodeIndex):
     return '127.0.0.1' if nodeIndex == 0 else masterPrivateIP
 
 def openTunnel(nodeIndex):
-    sshtunnel.DEFAULT_LOGLEVEL = logging.DEBUG
     global tunnel
     tunnel = SSHTunnelForwarder(
         (nodes[nodeIndex], 22),
