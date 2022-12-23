@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# step-by-step guide from https://cloudinfrastructureservices.co.uk/how-to-create-a-multi-node-mysql-cluster-on-ubuntu-20-04
 #installing cluster manager
 sudo apt-get update
 sudo wget https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster-community-management-server_8.0.31-1ubuntu20.04_amd64.deb
@@ -56,7 +56,7 @@ wget https://dev.mysql.com/get/Downloads/MySQL-Cluster-8.0/mysql-cluster_8.0.31-
 mkdir install
 tar -xvf mysql-cluster_8.0.31-1ubuntu20.04_amd64.deb-bundle.tar -C install/
 
-# creating mysql config file *TO EDIT
+# mysql config file content
     # echo "[mysqld]
     # # Options for mysqld process:
     # ndbcluster                      # run NDB storage engine

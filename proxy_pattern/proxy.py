@@ -4,14 +4,15 @@ import sshtunnel
 import logging
 import random
 from sshtunnel import SSHTunnelForwarder
-
+import subprocess
+import re
 
 #constants
-#nodes addresses, users, key file path
-nodes = ["54.164.78.84", "52.202.89.63", "44.212.34.166", "44.210.127.255"]
-masterPrivateIP = "10.0.1.202"
+#nodes addresses, users, SSHkey file path, db credentials
+nodes = ["3.236.100.67", "35.175.103.246", "3.234.214.25", "44.200.189.152"]
+masterPrivateIP = "10.0.1.254"
 sshUser = "ubuntu"
-mysqlUser = "root"
+mysqlUser = "sysbench"
 mysqlPassword = "asd123"
 privateKeyFilePath = "/home/jerome/.ssh/log8415-finalprojet-keypair.pem"
 
@@ -22,7 +23,6 @@ def remotePrivateIp(nodeIndex):
     return '127.0.0.1' if nodeIndex == 0 else masterPrivateIP
 
 def openTunnel(nodeIndex):
-
     sshtunnel.DEFAULT_LOGLEVEL = logging.DEBUG
     global tunnel
     tunnel = SSHTunnelForwarder(
@@ -33,13 +33,12 @@ def openTunnel(nodeIndex):
     )
     
     tunnel.start()
-    print(tunnel.local_bind_address)
 
 def mysqlConnect(nodeIndex):
     global sqlConnection
     sqlConnection = pymysql.connect(
-        host=remotePrivateIp(nodeIndex),
-        user="root",
+        host="127.0.0.1",
+        user="sysbench",
         passwd=mysqlPassword,
         db="sakila",
         port=tunnel.local_bind_port
@@ -48,18 +47,31 @@ def mysqlConnect(nodeIndex):
 #Random mode => route to random node
 def proxyRandom(query):
     nodeIndex = random.randint(0,3)
-    return routeQuery(nodeIndex)
+    return routeQuery(nodeIndex, query)
 
 #default mode => route to Master node(nodes[0])
 def proxyDefault(query):
     nodeIndex = 0
-    return routeQuery(nodeIndex)
+    return routeQuery(nodeIndex, query)
 
 #Ping mode => route to lowest ping from nodes
 def proxyPing(query):
-    return
+    pingLatencies = getNodePings()
+    nodeIndex = pingLatencies.index(min(pingLatencies))
 
-def routeQuery(nodeIndex):
+    return routeQuery(nodeIndex, query)
+
+def getNodePings():
+    latencies = []
+    for nodeIP in nodes:
+        ping = subprocess.Popen(['ping', '-c', '1', nodeIP], stdout= subprocess.PIPE)
+        output = str(ping.communicate()[0])
+        time = re.search('(min\/avg\/max\/mdev = )(.*)', output).group(2).split('/')[1]
+        latencies.append(time)
+    print(latencies)
+    return latencies
+
+def routeQuery(nodeIndex, query):
     openTunnel(nodeIndex)
     mysqlConnect(nodeIndex)
     queryResults = execQuery(query)
@@ -69,7 +81,7 @@ def routeQuery(nodeIndex):
 
 def main():
     print("testing tunnels")
-    proxyDefault("select * from actor limit 10")
+    queryResults = proxyPing("select * from actor limit 10")
 
 if __name__ == "__main__":
     main()
